@@ -1,7 +1,141 @@
-# Streamlit placeholder for Unit 4 Disease App
-# Please replace this with the full code you copied from ChatGPT or your editor
-
+# Interactive Disease Map with Quiz and Flashcard Mode (Streamlit)
 import streamlit as st
+import networkx as nx
+import matplotlib.pyplot as plt
+import random
 
-st.title("Unit 4 Infectious Diseases App")
-st.markdown("This is a placeholder file. Replace with full code to run the app.")
+# Categories and colors
+systems = {
+    "Skin": "lightcoral",
+    "Respiratory": "lightgreen",
+    "Cardio/Nervous": "lightskyblue",
+    "GI/STI/Urinary": "khaki"
+}
+
+# Disease facts (Unit 4 Full List)
+facts = {
+    "Skin": {
+        "Acne vulgaris": "Blocked follicles + P. acnes inflammation",
+        "Impetigo": "Highly contagious blisters; S. aureus or S. pyogenes",
+        "Folliculitis": "Hair follicle infection; S. aureus",
+        "Furuncles": "Walled-off abscess from folliculitis",
+        "Carbuncles": "Joined furuncles; deep infection",
+        "Scalded Skin Syndrome": "Exfoliatins cause skin peeling",
+        "Toxic Shock Syndrome": "TSST toxin; whole-body shock",
+        "Erysipelas": "Hot, red, raised facial rash; S. pyogenes",
+        "Necrotizing Fasciitis": "Flesh-eating strep; rapid tissue death",
+        "Papillomas": "Warts from cutaneous HPV",
+        "HPV Cancers": "Strains 16/18 linked to cervical cancer",
+        "Smallpox": "Eradicated; severe pox lesions",
+        "Herpes (oral/genital/neonatal)": "HSV latency + blisters",
+        "Varicella": "Chickenpox from VZV, respiratory spread",
+        "Zoster": "Shingles; reactivated VZV along nerves",
+        "Measles": "Koplik spots + full-body rash",
+        "Rubella": "Mild rash, severe congenital effects"
+    },
+    "Respiratory": {
+        "Streptococcal Pharyngitis": "Strep throat; no cough, risk of RF",
+        "Scarlet Fever": "Erythrogenic toxin; sandpaper rash",
+        "Diphtheria": "Gray membrane in throat; exotoxin",
+        "Common Cold": "200+ viruses; mostly rhinovirus",
+        "Pertussis": "Whooping cough; paralyzes cilia",
+        "Tuberculosis": "Acid-fast M. tuberculosis; Ghon complexes",
+        "Pneumococcal Pneumonia": "Rust sputum; S. pneumoniae",
+        "Atypical Pneumonia": "Walking pneumonia; Mycoplasma",
+        "Legionnaire’s Disease": "Legionella from AC units",
+        "RSV Disease": "Most common pneumonia in infants",
+        "Influenza": "Antigenic drift & shift; pandemics",
+        "Avian Influenza": "H5N1; deadly bird-to-human flu",
+        "SARS": "2003 outbreak; coronavirus; no vaccine",
+        "COVID-19": "Pandemic; SARS-CoV-2; ACE2 binding"
+    },
+    "Cardio/Nervous": {
+        "Sepsis & Septic Shock": "Immune overreaction → organ failure",
+        "Acute Bacterial Endocarditis": "IV drug use; S. aureus",
+        "Subacute Bacterial Endocarditis": "Oral streptococci + valve disease",
+        "Anthrax": "B. anthracis; black eschar; bioweapon",
+        "Gas Gangrene": "C. perfringens; gas bubbles in tissue",
+        "Plague": "Y. pestis; buboes; flea vector",
+        "Spotted Fever": "Rickettsia; tick-borne; rash on palms/soles",
+        "Infectious Mononucleosis": "EBV; swollen lymph nodes",
+        "Ebola Virus Disease": "Hemorrhagic fever; 30-70% fatal",
+        "HIV/AIDS": "Retrovirus; destroys CD4+ T cells",
+        "Bacterial Meningitis": "Neisseria, Hib, S. pneumo; fatal if untreated",
+        "Tetanus": "Rigid paralysis; deep wound + exotoxin",
+        "Botulism": "Flaccid paralysis; food toxin or wound",
+        "Rabies": "100% fatal post-symptom; bullet virus",
+        "Malaria": "Plasmodium; relapsing fevers; mosquito",
+        "Cytomegalovirus Disease": "Herpesvirus; congenital defects"
+    },
+    "GI/STI/Urinary": {
+        "Food Poisoning (B. cereus)": "Pre-formed rice toxins: emetic or diarrheal",
+        "Cholera": "Rice-water stool; V. cholerae toxin",
+        "C. diff Colitis": "Pseudomembranous colitis post-antibiotics",
+        "Listeriosis": "Listeria in cold food; neonatal meningitis",
+        "Salmonellosis": "Diarrhea; often from chicken or eggs",
+        "Typhoid Fever": "Salmonella Typhi; high fever, rash",
+        "Hepatitis A": "Fecal-oral, acute liver infection",
+        "Rotavirus Diarrhea": "Infant diarrhea; winter season",
+        "Norovirus Disease": "Cruise ship vomiting virus",
+        "Bacterial Vaginosis": "Dysbiosis, fishy odor, not STI",
+        "Chlamydial Disease": "Obligate intracellular; infertility risk",
+        "Syphilis": "Stages: chancre → rash → latency → CNS",
+        "UTI": "E. coli; short female urethra risk",
+        "Hepatitis B": "Blood/sex; liver cancer risk",
+        "Hepatitis C": "Silent liver killer; leading cause of transplants",
+        "Aflatoxin-related Liver Cancer": "Aspergillus toxin in moldy grain"
+    }
+}
+
+# App Title
+st.title("Unit 4 Infectious Diseases: Study Map, Flashcards & Quiz")
+
+mode = st.sidebar.radio("Select Mode", ["Study Map", "Flashcards", "Quiz"])
+
+if mode == "Study Map":
+    category = st.sidebar.selectbox("Select a Body System", list(systems.keys()))
+    selected_disease = st.sidebar.selectbox("Select a Disease", list(facts[category].keys()))
+
+    G = nx.DiGraph()
+    G.add_node(category)
+    for disease in facts[category]:
+        G.add_node(disease)
+        G.add_edge(category, disease)
+
+    pos = nx.spring_layout(G, seed=42)
+    plt.figure(figsize=(10, 8))
+    nx.draw(G, pos, with_labels=True, node_size=3000,
+            node_color=[systems[category] if node == category else 'white' for node in G.nodes],
+            edge_color='gray', font_size=10, font_weight='bold')
+    st.pyplot(plt)
+
+    st.subheader(f"Fact about {selected_disease}:")
+    st.info(facts[category][selected_disease])
+
+elif mode == "Flashcards":
+    all_diseases = [(cat, dis) for cat in facts for dis in facts[cat]]
+    if 'flash_index' not in st.session_state:
+        st.session_state.flash_index = 0
+
+    category, disease = all_diseases[st.session_state.flash_index % len(all_diseases)]
+    st.subheader(f"Flashcard {st.session_state.flash_index + 1} of {len(all_diseases)}")
+    st.markdown(f"**Disease**: {disease}")
+    if st.button("Show Answer"):
+        st.success(facts[category][disease])
+    if st.button("Next"):
+        st.session_state.flash_index += 1
+        st.experimental_rerun()
+
+elif mode == "Quiz":
+    all_qs = [(cat, dis, facts[cat][dis]) for cat in facts for dis in facts[cat]]
+    q = random.choice(all_qs)
+    options = [q[1]] + random.sample([d for _, d, _ in all_qs if d != q[1]], 3)
+    random.shuffle(options)
+    st.subheader("Quiz: Which disease matches this description?")
+    st.markdown(f"**Clue**: {q[2]}")
+    answer = st.radio("Choose one:", options)
+    if st.button("Submit Answer"):
+        if answer == q[1]:
+            st.success("Correct!")
+        else:
+            st.error(f"Incorrect. Correct answer: {q[1]}")

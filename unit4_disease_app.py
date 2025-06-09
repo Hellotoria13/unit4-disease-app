@@ -64,13 +64,16 @@ elif mode == "Quiz":
     st.subheader("Quiz: Which disease matches this description?")
     st.markdown(f"🧠 **Clue**: {q[2]}")
     answer = st.radio("Choose one:", options)
-    if st.button("Submit Answer"):
-        st.session_state.quiz_total += 1
-        if answer == q[1]:
-            st.session_state.quiz_score += 1
-            st.success(f"✅ Correct! {q[2]}")
-        else:
-            st.error(f"❌ Incorrect. Correct answer: {q[1]} — {q[2]}")
+    answer = st.radio("Choose one:", options, key="current_answer")
+
+if st.button("Submit Answer"):
+    st.session_state.quiz_total += 1
+    if st.session_state.current_answer == q[1]:
+        st.session_state.quiz_score += 1
+        st.success(f"✅ Correct! {q[2]}")
+    else:
+        st.error(f"❌ Incorrect. Correct answer: {q[1]} — {q[2]}")
+        
         st.write(f"**Score:** {st.session_state.quiz_score}/{st.session_state.quiz_total}")
         if st.button("Try Another"):
             st.experimental_rerun()

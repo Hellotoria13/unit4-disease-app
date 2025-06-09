@@ -15,7 +15,7 @@ systems = {
     "GI/STI/Urinary": "khaki"
 }
 
-# Disease facts (⚠️ SHORTENED FOR DEMO — expand as needed)
+# Disease facts
 facts = {
     "Skin": {
         "Acne vulgaris": "Blocked follicles + P. acnes inflammation",
